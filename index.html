@@ -26,11 +26,15 @@
     --original-font: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
     --site-font: "Handwriting", var(--original-font);
     --bg: #ffffff;
-    --fg: #111111;
-    --muted: #666666;
+    --fg: #191919;
+    --muted: #606060;
     --accent: #111111;
-    --dot: rgba(0, 0, 0, 0.08);
-    --dot-glow: rgba(0, 0, 0, 0.35);
+    --nav-blue: #2563eb;
+    --dot: rgba(0, 0, 0, 0.18);
+    --grid: rgba(0, 0, 0, 0.09);
+    --tag-bg: #eeeeee;
+    --tag-hover: #e0e0e0;
+    --dot-glow: rgba(0, 0, 0, 0.20);
   }
 
   :root[data-font="original"] {
@@ -39,12 +43,16 @@
 
   @media (prefers-color-scheme: dark) {
     :root {
-      --bg: #0d0d0d;
-      --fg: #f2f2f2;
-      --muted: #999999;
-      --accent: #f2f2f2;
-      --dot: rgba(255, 255, 255, 0.09);
-      --dot-glow: rgba(255, 255, 255, 0.4);
+      --bg: #141414;
+      --fg: #eeeeee;
+      --muted: #b5b5b5;
+      --accent: #ffffff;
+      --nav-blue: #7eb0ff;
+      --dot: rgba(255, 255, 255, 0.22);
+      --grid: rgba(255, 255, 255, 0.09);
+      --tag-bg: #292929;
+      --tag-hover: #383838;
+      --dot-glow: rgba(255, 255, 255, 0.20);
     }
   }
 
@@ -73,6 +81,19 @@
     font-family: inherit;
   }
 
+  .pen-trail {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 25;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .pen-trail { display: none; }
+  }
+
   .font-toggle {
     position: fixed;
     right: max(16px, env(safe-area-inset-right));
@@ -81,13 +102,21 @@
     min-height: 44px;
     padding: 8px 14px;
     border: 1px solid var(--dot);
-    border-radius: 999px;
+    border-radius: 5px 9px 5px 8px;
     background: color-mix(in srgb, var(--bg) 90%, transparent);
     color: var(--muted);
-    font-size: 0.78rem;
+    font-size: 1.01rem;
     cursor: pointer;
     backdrop-filter: blur(14px);
     -webkit-backdrop-filter: blur(14px);
+  }
+
+  .font-toggle .font-status { color: #b52c2c; }
+  .font-toggle[aria-pressed="true"] .font-status { color: #76e000; }
+
+  @media (prefers-color-scheme: dark) {
+    .font-toggle .font-status { color: #ff8585; }
+    .font-toggle[aria-pressed="true"] .font-status { color: #a3ff12; }
   }
 
   .font-toggle:hover {
@@ -110,20 +139,20 @@
     align-items: center;
     gap: 18px;
     padding: 10px 16px 10px 22px;
-    border-radius: 999px;
+    border-radius: 5px 9px 5px 8px;
     background-color: color-mix(in srgb, var(--bg) 78%, transparent);
     border: 1px solid var(--dot);
     backdrop-filter: blur(14px);
     -webkit-backdrop-filter: blur(14px);
     overflow: hidden;
-    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+    box-shadow: 2px 3px 0 var(--dot);
   }
 
   nav a {
     position: relative;
     color: var(--muted);
     text-decoration: none;
-    font-size: 0.78rem;
+    font-size: 1.01rem;
     letter-spacing: 0.02em;
     padding-bottom: 3px;
     transition: color 0.15s ease, transform 0.15s ease;
@@ -135,19 +164,23 @@
   }
 
   nav a.current {
-    color: var(--accent);
+    color: var(--nav-blue);
   }
 
   nav a.current::after {
     content: "";
     position: absolute;
-    left: 50%;
+    left: 8%;
+    right: 8%;
     bottom: -3px;
-    transform: translateX(-50%);
-    width: 3px;
-    height: 3px;
-    border-radius: 50%;
-    background: var(--accent);
+    height: 2px;
+    border-radius: 60% 35% 55% 30%;
+    transform: rotate(-2deg);
+    background-color: currentColor;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    nav a.current { color: var(--nav-blue); }
   }
 
   nav .divider {
@@ -170,6 +203,13 @@
   nav .socials a:focus-visible {
     transform: translateY(-1px);
   }
+
+  .sketch-icon {
+    overflow: visible;
+    transform: rotate(-3deg);
+  }
+
+  a:nth-child(even) .sketch-icon { transform: rotate(3deg); }
 
   nav .socials svg {
     width: 18px;
@@ -222,10 +262,10 @@
     content: "";
     position: fixed;
     inset: 0;
-    background-image: radial-gradient(var(--dot) 1px, transparent 1px);
-    background-size: 22px 22px;
-    -webkit-mask-image: radial-gradient(ellipse 65% 55% at 50% 45%, #000 0%, transparent 75%);
-    mask-image: radial-gradient(ellipse 65% 55% at 50% 45%, #000 0%, transparent 75%);
+    background-image:
+      linear-gradient(to right, var(--grid) 1px, transparent 1px),
+      linear-gradient(to bottom, var(--grid) 1px, transparent 1px);
+    background-size: 28px 28px;
     pointer-events: none;
     z-index: 0;
   }
@@ -234,20 +274,16 @@
     content: none;
     position: fixed;
     inset: 0;
-    background-image: radial-gradient(var(--dot-glow) 1px, transparent 1px);
-    background-size: 22px 22px;
+    background-image:
+      linear-gradient(to right, var(--dot-glow) 1px, transparent 1px),
+      linear-gradient(to bottom, var(--dot-glow) 1px, transparent 1px);
+    background-size: 28px 28px;
     -webkit-mask-image: radial-gradient(circle 140px at var(--mx, 50%) var(--my, 50%), #000 0%, transparent 100%);
     mask-image: radial-gradient(circle 140px at var(--mx, 50%) var(--my, 50%), #000 0%, transparent 100%);
     opacity: 0;
     transition: opacity 0.3s ease;
     pointer-events: none;
     z-index: 0;
-  }
-
-  body.projects::before,
-  body.skills::before {
-    -webkit-mask-image: radial-gradient(ellipse 85% 80% at 50% 45%, #000 0%, transparent 80%);
-    mask-image: radial-gradient(ellipse 85% 80% at 50% 45%, #000 0%, transparent 80%);
   }
 
   @media (hover: hover) and (pointer: fine) {
@@ -266,18 +302,34 @@
     position: relative;
     z-index: 1;
     text-align: center;
-    max-width: 460px;
+    max-width: 560px;
+  }
+
+  #aboutName {
+    min-height: 1.3em;
+  }
+
+  #about main::before {
+    content: "";
+    position: absolute;
+    inset: -72px -64px;
+    z-index: -1;
+    pointer-events: none;
+    background: radial-gradient(ellipse at center,
+      color-mix(in srgb, var(--bg) 92%, transparent) 0%,
+      color-mix(in srgb, var(--bg) 75%, transparent) 42%,
+      transparent 74%);
   }
 
   h1 {
-    font-size: 1.4rem;
+    font-size: 1.82rem;
     font-weight: 600;
     margin: 0 0 4px;
     letter-spacing: -0.02em;
   }
 
   .title {
-    font-size: 0.9rem;
+    font-size: 1.17rem;
     color: var(--muted);
     margin: 0 0 20px;
   }
@@ -287,7 +339,7 @@
   }
 
   p.about {
-    font-size: 0.85rem;
+    font-size: 1.1rem;
     line-height: 1.7;
     color: var(--muted);
     margin: 0 0 28px;
@@ -295,7 +347,7 @@
 
   #projects main,
   #skills main {
-    max-width: 780px;
+    max-width: 900px;
     width: 100%;
     text-align: left;
   }
@@ -306,7 +358,7 @@
     position: absolute;
     inset: -180px -240px;
     z-index: -1;
-    background: radial-gradient(ellipse 50% 50% at 50% 50%, var(--bg) 0%, var(--bg) 60%, transparent 92%);
+    background: none;
     pointer-events: none;
   }
 
@@ -383,34 +435,19 @@
   .project-item {
     position: relative;
     padding: 20px 16px;
+    margin-bottom: 12px;
+    border: 1px solid transparent;
+    border-radius: 5px 9px 5px 8px;
     cursor: default;
-    transition: background-color 0.25s ease;
+    transition: background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
   }
 
-  .project-item + .project-item {
-    border-top: 1px solid var(--dot);
-  }
-
-  .project-item::before {
-    content: "";
-    position: absolute;
-    left: 0;
-    top: 12px;
-    bottom: 12px;
-    width: 2px;
-    background: linear-gradient(to bottom, transparent, color-mix(in srgb, var(--accent) 50%, transparent) 30%, color-mix(in srgb, var(--accent) 50%, transparent) 70%, transparent);
-    opacity: 0;
-    transform: scaleY(0);
-    transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.25s ease;
-  }
-
-  .project-item:hover {
-    background-color: color-mix(in srgb, var(--fg) 4%, transparent);
-  }
-
-  .project-item:hover::before {
-    opacity: 1;
-    transform: scaleY(1);
+  .project-item:hover,
+  .project-item:focus-within {
+    background-color: var(--bg);
+    border-color: var(--dot);
+    box-shadow: 3px 4px 0 var(--dot);
+    transform: translateY(-2px);
   }
 
   .project-top {
@@ -424,7 +461,7 @@
     display: flex;
     align-items: baseline;
     gap: 8px;
-    font-size: 0.95rem;
+    font-size: 1.23rem;
     font-weight: 600;
     letter-spacing: -0.01em;
     transition: color 0.15s ease;
@@ -435,7 +472,7 @@
   }
 
   .project-year {
-    font-size: 0.68rem;
+    font-size: 0.884rem;
     font-weight: 400;
     color: var(--muted);
     opacity: 0.7;
@@ -469,7 +506,7 @@
   .project-desc {
     position: relative;
     margin: 6px 0 0;
-    font-size: 0.8rem;
+    font-size: 1.04rem;
     line-height: 1.55;
     color: var(--muted);
   }
@@ -482,12 +519,19 @@
     margin-top: 12px;
   }
 
+  .project-tags span,
+  .skill-tags span,
+  .node span {
+    box-shadow: 2px 3px 0 var(--dot);
+  }
+
   .project-tags span {
-    font-size: 0.66rem;
+    background-color: var(--tag-bg);
+    font-size: 0.858rem;
     letter-spacing: 0.02em;
     color: var(--muted);
     border: 1px solid var(--dot);
-    border-radius: 999px;
+    border-radius: 4px 7px 3px 6px;
     padding: 2px 9px;
     transition: border-color 0.15s ease, color 0.15s ease;
   }
@@ -539,55 +583,35 @@
   }
 
   .lang-file {
-    --file-clip: polygon(0 0, 64% 0, 100% 26%, 100% 100%, 0 100%);
     position: relative;
     width: 56px;
     height: 72px;
-    clip-path: var(--file-clip);
-    background-color: color-mix(in srgb, var(--c) 55%, transparent);
+    transform: rotate(-3deg);
+    transition: transform 0.25s ease;
   }
 
-  .lang-file::before,
-  .lang-file::after {
-    content: "";
-    position: absolute;
-    inset: 1px;
-    clip-path: var(--file-clip);
+  .lang:nth-child(even) .lang-file { transform: rotate(3deg); }
+  .lang:nth-child(3n) .lang-file { transform: rotate(-1deg); }
+  .lang:hover .lang-file { transform: rotate(0deg); }
+
+  .lang-outline {
+    display: block;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+    stroke: var(--c);
+    stroke-width: 1.5;
+    stroke-linecap: round;
+    stroke-linejoin: round;
   }
 
-  .lang-file::before {
-    background-color: var(--bg);
-  }
-
-  .lang-file::after {
-    z-index: 1;
-    background: linear-gradient(155deg, var(--c) 0%, transparent 85%);
-    opacity: 0.16;
-    transition: opacity 0.25s ease;
-  }
-
-  .lang:hover .lang-file::after {
-    opacity: 0.3;
-  }
-
-  .lang-fold {
-    position: absolute;
-    z-index: 1;
-    top: 1px;
-    right: 1px;
-    width: calc(36% - 1px);
-    height: calc(26% - 1px);
-    clip-path: polygon(0 0, 100% 100%, 0 100%);
-    background: linear-gradient(155deg, var(--c) 0%, transparent 95%);
-    opacity: 0.4;
-    transition: opacity 0.25s ease;
-  }
-
-  .lang:hover .lang-fold {
-    opacity: 0.6;
-  }
+  .lang-paper { fill: var(--bg); }
+  .lang-wash { fill: var(--c); fill-opacity: 0.07; stroke: none; }
+  .lang-fold { fill: var(--c); fill-opacity: 0.12; }
+  .lang-sketch { fill: none; stroke-width: 0.7; opacity: 0.35; }
 
   .lang-ext {
+    color: var(--c);
     position: absolute;
     z-index: 2;
     left: 0;
@@ -595,19 +619,17 @@
     top: 60%;
     transform: translateY(-50%);
     text-align: center;
-    font-size: 0.65rem;
+    font-size: 0.845rem;
     letter-spacing: -0.02em;
   }
 
   .tool-grid {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
-    border-top: 1px solid var(--dot);
   }
 
   .tool-card {
     padding: 15px 0 17px;
-    border-bottom: 1px solid var(--dot);
   }
 
   .tool-card:nth-child(odd) {
@@ -616,7 +638,6 @@
 
   .tool-card:nth-child(even) {
     padding-left: 24px;
-    border-left: 1px solid var(--dot);
   }
 
   @media (max-width: 620px) {
@@ -636,9 +657,9 @@
 
   .tool-card-name {
     display: block;
-    font-size: 0.66rem;
-    text-transform: uppercase;
-    letter-spacing: 0.12em;
+    font-size: 0.858rem;
+    text-transform: none;
+    letter-spacing: 0.03em;
     color: var(--muted);
     margin-bottom: 11px;
   }
@@ -650,21 +671,20 @@
   }
 
   .skill-tags span {
-    --c: color-mix(in srgb, var(--fg) 40%, transparent);
-    font-size: 0.67rem;
+    --c: var(--muted);
+    font-size: 0.871rem;
     letter-spacing: 0.01em;
-    color: var(--muted);
-    background-color: color-mix(in srgb, var(--fg) 6%, transparent);
-    border-bottom: 1px solid color-mix(in srgb, var(--c) 70%, transparent);
+    color: var(--c);
+    background-color: var(--tag-bg);
+    background-image: linear-gradient(to top, color-mix(in srgb, var(--c) 16%, transparent), transparent 80%);
     border-radius: 3px 3px 1px 1px;
     padding: 3px 8px;
     transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
   }
 
   .skill-tags span:hover {
-    background-color: color-mix(in srgb, var(--fg) 13%, transparent);
-    border-bottom-color: var(--c);
-    color: var(--fg);
+    background-color: var(--tag-hover);
+    color: var(--c);
   }
 
   @media (max-width: 680px) {
@@ -680,7 +700,7 @@
   }
 
   #interests main {
-    max-width: 780px;
+    max-width: 900px;
     width: 100%;
     text-align: left;
   }
@@ -786,24 +806,24 @@
     display: block;
     white-space: nowrap;
     color: var(--muted);
-    background-color: color-mix(in srgb, var(--bg) 88%, transparent);
+    background-color: var(--tag-bg);
     border: 1px solid var(--dot);
-    border-radius: 999px;
+    border-radius: 45% 5% 40% 8% / 8% 45% 10% 40%;
     padding: 4px 11px;
     transition: color 0.25s ease, border-color 0.25s ease, transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
   }
 
   .node.s1 span {
-    font-size: 0.84rem;
+    font-size: 1.09rem;
     padding: 6px 14px;
   }
 
   .node.s2 span {
-    font-size: 0.74rem;
+    font-size: 0.962rem;
   }
 
   .node.s3 span {
-    font-size: 0.67rem;
+    font-size: 0.871rem;
   }
 
   .mind.focus .node {
@@ -843,20 +863,17 @@
     transform: translate(-50%, calc(-100% - 22px));
     width: 230px;
     padding: 7px 10px;
-    font-size: 0.66rem;
+    font-size: 0.858rem;
     line-height: 1.55;
     color: var(--muted);
-    background-color: color-mix(in srgb, var(--bg) 25%, transparent);
+    background-color: var(--bg);
     background-image: linear-gradient(145deg,
       color-mix(in srgb, var(--fg) 11%, transparent),
       color-mix(in srgb, var(--fg) 2%, transparent));
-    backdrop-filter: blur(10px) saturate(180%);
-    -webkit-backdrop-filter: blur(10px) saturate(180%);
+
     border: 1px solid color-mix(in srgb, var(--fg) 14%, transparent);
     border-radius: 7px;
-    box-shadow:
-      0 8px 24px rgba(0, 0, 0, 0.2),
-      inset 0 1px 0 rgba(255, 255, 255, 0.25);
+    box-shadow: 3px 4px 0 var(--dot);
     opacity: 0;
     pointer-events: none;
     transition: opacity 0.2s ease;
@@ -897,10 +914,37 @@
     }
   }
 
+  /* Keep larger handwriting comfortable on small screens and short windows. */
+  @media (max-width: 640px) {
+    nav {
+      width: max-content;
+      max-width: calc(100% - 24px);
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 10px 14px;
+      padding: 10px 14px;
+    }
+
+    nav a { font-size: 0.95rem; }
+    nav .socials { gap: 10px; }
+    section.page { padding: 110px 20px 80px; }
+    .scroll-area, .skills-body { max-height: calc(100dvh - 240px); }
+    #interests main { max-height: 100%; overflow-y: auto; }
+    .project-top { align-items: flex-start; }
+    .project-name { flex-wrap: wrap; }
+    .mind { margin-top: 0; }
+  }
+
+  @media (max-height: 600px) {
+    section.page { padding-top: 100px; padding-bottom: 76px; }
+    section.page main { max-height: 100%; overflow-y: auto; }
+    .scroll-area, .skills-body { max-height: calc(100dvh - 250px); }
+  }
 </style>
 </head>
 <body>
-  <button class="font-toggle" id="fontToggle" type="button" aria-pressed="true" aria-label="Use handwriting font">Handwriting: on</button>
+  <canvas class="pen-trail" id="penTrail" aria-hidden="true"></canvas>
+  <button class="font-toggle" id="fontToggle" type="button" aria-pressed="true" aria-label="Use handwriting font">Handwriting: <span class="font-status">on</span></button>
   <nav>
     <a href="#about">about</a>
     <a href="#projects">projects</a>
@@ -909,28 +953,20 @@
     <span class="divider"></span>
     <span class="socials">
       <a href="https://github.cadenchau.com" target="_blank" rel="noopener" aria-label="GitHub">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M9 19c-4.3 1.4-4.3-2.5-6-3m12 5v-3.5c0-1 .1-1.4-.5-2 2.8-.3 5.5-1.4 5.5-6a4.6 4.6 0 0 0-1.3-3.2 4.2 4.2 0 0 0-.1-3.2s-1.1-.3-3.5 1.3a12.3 12.3 0 0 0-6.2 0C6.5 2.8 5.4 3.1 5.4 3.1a4.2 4.2 0 0 0-.1 3.2A4.6 4.6 0 0 0 4 9.5c0 4.6 2.7 5.7 5.5 6-.6.6-.6 1.2-.5 2V21"/>
-        </svg>
+        <svg class="sketch-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 19 Q6.5 20.5 5.2 18.5 Q4.3 16.6 3 16 M9 21 Q8.6 19 9.1 17.6 Q9.2 16.7 9.6 16 Q3.5 15.4 4 9.7 Q3.8 7.7 5.3 6.3 Q4.8 4.9 5.5 3.2 Q7 3.3 9 4.5 Q12 3.6 15 4.5 Q17.2 3 18.5 3.3 Q19 4.7 18.6 6.2 Q20.3 7.8 20 10 Q20.2 15.2 14.5 16 Q15.3 17 15 18.5 Q14.9 20 15.1 21"/></svg>
       </a>
       <a href="https://www.linkedin.com/in/caden-c-760bb8315/" target="_blank" rel="noopener" aria-label="LinkedIn">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M6.5 8.5v9M6.5 5.5v.01M11.5 17.5v-5c0-1.7 1.2-3 3-3s3 1.3 3 3v5M11.5 9.5v8"/>
-          <rect x="3" y="3" width="18" height="18" rx="2"/>
-        </svg>
+        <svg class="sketch-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5.2 3.2 Q11 2.5 18.8 3.1 Q21.4 2.9 20.9 5.4 Q21.4 12 20.8 18.8 Q21 21.4 18.4 20.9 Q11 21.4 5 20.9 Q2.6 21 3.1 18.6 Q2.6 12 3.2 5.2 Q2.9 3 5.2 3.2 Z M6.6 9 Q6.2 13 6.6 17.6 M6.5 5.8 L6.6 6 M11.5 17.6 Q11.2 13.5 11.6 9.5 M11.5 12.6 Q11.8 9.2 14.6 9.5 Q17.7 9.3 17.3 12.8 Q17.1 15 17.5 17.5"/></svg>
       </a>
       <a href="mailto:caden@cadenchau.com" aria-label="Email">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-          <rect x="3" y="5" width="18" height="14" rx="2"/>
-          <path d="M3 7l9 6 9-6"/>
-        </svg>
+        <svg class="sketch-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 5.2 Q12 4.7 19 5.1 Q21.4 4.9 20.9 7.5 Q21.4 12 20.8 17 Q21 19.4 18.6 18.9 Q12 19.4 5 18.9 Q2.6 19 3.1 16.5 Q2.7 12 3.2 7 Q2.9 4.9 5 5.2 Z M3.3 7 Q7.7 9.6 12 13.2 Q16.5 9.5 20.8 7 M3.4 17 Q6.2 14.8 8 12.7 M20.6 17 Q17.8 14.6 16 12.7"/></svg>
       </a>
     </span>
   </nav>
 
   <section id="about" class="page" data-title="About">
     <main>
-      <h1>Caden Chau</h1>
+      <h1 id="aboutName" aria-label="Caden Chau"><span aria-hidden="true">Caden Chau</span></h1>
       <p class="title">Software Engineer <span class="dim">//</span> CS @ UCLA</p>
       <p class="about">
         Builder and full stack engineer. I ship things fast and love competing in hackathons. I've built and scaled apps to 50k+ users, and games with 100k+ monthly active users and millions of visits.
@@ -950,7 +986,7 @@
             <div class="project-name">ps99rap <span class="project-year">2024 &ndash; present</span></div>
             <div class="project-links">
               <a href="https://ps99rap.com" target="_blank" rel="noopener" aria-label="Live demo">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                <svg class="sketch-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 13 Q17.6 16 18.1 18.7 Q18 21 15.8 20.8 Q10 21.3 5.2 20.9 Q2.6 21 3.2 18.5 Q2.7 13 3.1 8.2 Q2.9 5.8 5.2 6.1 Q8 5.7 11 6.1 M15 3.2 Q18 2.8 21 3.1 Q20.6 6 21 9 M10 14 Q12.5 10.7 15.5 8.3 T21 3.1"/></svg>
               </a>
             </div>
           </div>
@@ -962,7 +998,7 @@
             <div class="project-name">Naval Warfare 2</div>
             <div class="project-links">
               <a href="https://www.roblox.com/games/92087407453664/Naval-Warfare-Two" target="_blank" rel="noopener" aria-label="Play Naval Warfare 2 on Roblox">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                <svg class="sketch-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 13 Q17.6 16 18.1 18.7 Q18 21 15.8 20.8 Q10 21.3 5.2 20.9 Q2.6 21 3.2 18.5 Q2.7 13 3.1 8.2 Q2.9 5.8 5.2 6.1 Q8 5.7 11 6.1 M15 3.2 Q18 2.8 21 3.1 Q20.6 6 21 9 M10 14 Q12.5 10.7 15.5 8.3 T21 3.1"/></svg>
               </a>
             </div>
           </div>
@@ -974,10 +1010,10 @@
             <div class="project-name">rolimons.py <span class="project-year">2022 &ndash; present</span></div>
             <div class="project-links">
               <a href="https://github.com/wa1ker38552/rolimons.py" target="_blank" rel="noopener" aria-label="Source code">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 19c-4.3 1.4-4.3-2.5-6-3m12 5v-3.5c0-1 .1-1.4-.5-2 2.8-.3 5.5-1.4 5.5-6a4.6 4.6 0 0 0-1.3-3.2 4.2 4.2 0 0 0-.1-3.2s-1.1-.3-3.5 1.3a12.3 12.3 0 0 0-6.2 0C6.5 2.8 5.4 3.1 5.4 3.1a4.2 4.2 0 0 0-.1 3.2A4.6 4.6 0 0 0 4 9.5c0 4.6 2.7 5.7 5.5 6-.6.6-.6 1.2-.5 2V21"/></svg>
+                <svg class="sketch-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 19 Q6.5 20.5 5.2 18.5 Q4.3 16.6 3 16 M9 21 Q8.6 19 9.1 17.6 Q9.2 16.7 9.6 16 Q3.5 15.4 4 9.7 Q3.8 7.7 5.3 6.3 Q4.8 4.9 5.5 3.2 Q7 3.3 9 4.5 Q12 3.6 15 4.5 Q17.2 3 18.5 3.3 Q19 4.7 18.6 6.2 Q20.3 7.8 20 10 Q20.2 15.2 14.5 16 Q15.3 17 15 18.5 Q14.9 20 15.1 21"/></svg>
               </a>
               <a href="https://pypi.org/project/rolimons/" target="_blank" rel="noopener" aria-label="Live demo">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                <svg class="sketch-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 13 Q17.6 16 18.1 18.7 Q18 21 15.8 20.8 Q10 21.3 5.2 20.9 Q2.6 21 3.2 18.5 Q2.7 13 3.1 8.2 Q2.9 5.8 5.2 6.1 Q8 5.7 11 6.1 M15 3.2 Q18 2.8 21 3.1 Q20.6 6 21 9 M10 14 Q12.5 10.7 15.5 8.3 T21 3.1"/></svg>
               </a>
             </div>
           </div>
@@ -989,7 +1025,7 @@
             <div class="project-name">FakeCord <span class="project-year">2022 &ndash; 2023</span></div>
             <div class="project-links">
               <a href="https://github.com/wa1ker38552/FakeCord-v2" target="_blank" rel="noopener" aria-label="Source code">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 19c-4.3 1.4-4.3-2.5-6-3m12 5v-3.5c0-1 .1-1.4-.5-2 2.8-.3 5.5-1.4 5.5-6a4.6 4.6 0 0 0-1.3-3.2 4.2 4.2 0 0 0-.1-3.2s-1.1-.3-3.5 1.3a12.3 12.3 0 0 0-6.2 0C6.5 2.8 5.4 3.1 5.4 3.1a4.2 4.2 0 0 0-.1 3.2A4.6 4.6 0 0 0 4 9.5c0 4.6 2.7 5.7 5.5 6-.6.6-.6 1.2-.5 2V21"/></svg>
+                <svg class="sketch-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 19 Q6.5 20.5 5.2 18.5 Q4.3 16.6 3 16 M9 21 Q8.6 19 9.1 17.6 Q9.2 16.7 9.6 16 Q3.5 15.4 4 9.7 Q3.8 7.7 5.3 6.3 Q4.8 4.9 5.5 3.2 Q7 3.3 9 4.5 Q12 3.6 15 4.5 Q17.2 3 18.5 3.3 Q19 4.7 18.6 6.2 Q20.3 7.8 20 10 Q20.2 15.2 14.5 16 Q15.3 17 15 18.5 Q14.9 20 15.1 21"/></svg>
               </a>
             </div>
           </div>
@@ -1001,10 +1037,10 @@
             <div class="project-name">Autocord <span class="project-year">2023</span></div>
             <div class="project-links">
               <a href="https://github.com/wa1ker38552/autocord" target="_blank" rel="noopener" aria-label="Source code">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 19c-4.3 1.4-4.3-2.5-6-3m12 5v-3.5c0-1 .1-1.4-.5-2 2.8-.3 5.5-1.4 5.5-6a4.6 4.6 0 0 0-1.3-3.2 4.2 4.2 0 0 0-.1-3.2s-1.1-.3-3.5 1.3a12.3 12.3 0 0 0-6.2 0C6.5 2.8 5.4 3.1 5.4 3.1a4.2 4.2 0 0 0-.1 3.2A4.6 4.6 0 0 0 4 9.5c0 4.6 2.7 5.7 5.5 6-.6.6-.6 1.2-.5 2V21"/></svg>
+                <svg class="sketch-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 19 Q6.5 20.5 5.2 18.5 Q4.3 16.6 3 16 M9 21 Q8.6 19 9.1 17.6 Q9.2 16.7 9.6 16 Q3.5 15.4 4 9.7 Q3.8 7.7 5.3 6.3 Q4.8 4.9 5.5 3.2 Q7 3.3 9 4.5 Q12 3.6 15 4.5 Q17.2 3 18.5 3.3 Q19 4.7 18.6 6.2 Q20.3 7.8 20 10 Q20.2 15.2 14.5 16 Q15.3 17 15 18.5 Q14.9 20 15.1 21"/></svg>
               </a>
               <a href="https://pypi.org/project/autocord/" target="_blank" rel="noopener" aria-label="Live demo">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                <svg class="sketch-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 13 Q17.6 16 18.1 18.7 Q18 21 15.8 20.8 Q10 21.3 5.2 20.9 Q2.6 21 3.2 18.5 Q2.7 13 3.1 8.2 Q2.9 5.8 5.2 6.1 Q8 5.7 11 6.1 M15 3.2 Q18 2.8 21 3.1 Q20.6 6 21 9 M10 14 Q12.5 10.7 15.5 8.3 T21 3.1"/></svg>
               </a>
             </div>
           </div>
@@ -1016,10 +1052,10 @@
             <div class="project-name">Homepage <span class="project-year">2023 &ndash; present</span></div>
             <div class="project-links">
               <a href="https://github.com/wa1ker38552/Browser-Homepage" target="_blank" rel="noopener" aria-label="Source code">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 19c-4.3 1.4-4.3-2.5-6-3m12 5v-3.5c0-1 .1-1.4-.5-2 2.8-.3 5.5-1.4 5.5-6a4.6 4.6 0 0 0-1.3-3.2 4.2 4.2 0 0 0-.1-3.2s-1.1-.3-3.5 1.3a12.3 12.3 0 0 0-6.2 0C6.5 2.8 5.4 3.1 5.4 3.1a4.2 4.2 0 0 0-.1 3.2A4.6 4.6 0 0 0 4 9.5c0 4.6 2.7 5.7 5.5 6-.6.6-.6 1.2-.5 2V21"/></svg>
+                <svg class="sketch-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 19 Q6.5 20.5 5.2 18.5 Q4.3 16.6 3 16 M9 21 Q8.6 19 9.1 17.6 Q9.2 16.7 9.6 16 Q3.5 15.4 4 9.7 Q3.8 7.7 5.3 6.3 Q4.8 4.9 5.5 3.2 Q7 3.3 9 4.5 Q12 3.6 15 4.5 Q17.2 3 18.5 3.3 Q19 4.7 18.6 6.2 Q20.3 7.8 20 10 Q20.2 15.2 14.5 16 Q15.3 17 15 18.5 Q14.9 20 15.1 21"/></svg>
               </a>
               <a href="https://home.cadenchau.com" target="_blank" rel="noopener" aria-label="Live demo">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                <svg class="sketch-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 13 Q17.6 16 18.1 18.7 Q18 21 15.8 20.8 Q10 21.3 5.2 20.9 Q2.6 21 3.2 18.5 Q2.7 13 3.1 8.2 Q2.9 5.8 5.2 6.1 Q8 5.7 11 6.1 M15 3.2 Q18 2.8 21 3.1 Q20.6 6 21 9 M10 14 Q12.5 10.7 15.5 8.3 T21 3.1"/></svg>
               </a>
             </div>
           </div>
@@ -1041,31 +1077,76 @@
           <div class="skill-block">
             <ol class="lang-grid">
               <li class="lang" style="--i: 0; --c: #3776AB" title="Python">
-                <span class="lang-file"><span class="lang-fold"></span><span class="lang-ext">.py</span></span>
+                <span class="lang-file"><svg class="lang-outline" viewBox="0 0 56 72" aria-hidden="true">
+                  <path class="lang-paper" d="M4 3 Q12 1 20 3 T35 3 Q40 7 44 12 T52 21 Q54 32 52 42 T53 67 Q42 70 29 68 T4 69 Q1 56 3 44 T3 22 Q1 11 4 3 Z"/>
+                  <path class="lang-wash" d="M4 3 Q12 1 20 3 T35 3 Q40 7 44 12 T52 21 Q54 32 52 42 T53 67 Q42 70 29 68 T4 69 Q1 56 3 44 T3 22 Q1 11 4 3 Z"/>
+                  <path class="lang-fold" d="M35 3 Q34 11 36 20 Q43 19 52 21"/>
+                  <path class="lang-sketch" d="M6 7 Q4 24 6 32 M7 65 Q19 63 28 65 T48 65"/>
+                </svg><span class="lang-ext">.py</span></span>
               </li>
               <li class="lang" style="--i: 1; --c: #4B50C4" title="Lua">
-                <span class="lang-file"><span class="lang-fold"></span><span class="lang-ext">.lua</span></span>
+                <span class="lang-file"><svg class="lang-outline" viewBox="0 0 56 72" aria-hidden="true">
+                  <path class="lang-paper" d="M4 3 Q12 1 20 3 T35 3 Q40 7 44 12 T52 21 Q54 32 52 42 T53 67 Q42 70 29 68 T4 69 Q1 56 3 44 T3 22 Q1 11 4 3 Z"/>
+                  <path class="lang-wash" d="M4 3 Q12 1 20 3 T35 3 Q40 7 44 12 T52 21 Q54 32 52 42 T53 67 Q42 70 29 68 T4 69 Q1 56 3 44 T3 22 Q1 11 4 3 Z"/>
+                  <path class="lang-fold" d="M35 3 Q34 11 36 20 Q43 19 52 21"/>
+                  <path class="lang-sketch" d="M6 7 Q4 24 6 32 M7 65 Q19 63 28 65 T48 65"/>
+                </svg><span class="lang-ext">.lua</span></span>
               </li>
               <li class="lang" style="--i: 2; --c: #E9C723" title="JavaScript">
-                <span class="lang-file"><span class="lang-fold"></span><span class="lang-ext">.js</span></span>
+                <span class="lang-file"><svg class="lang-outline" viewBox="0 0 56 72" aria-hidden="true">
+                  <path class="lang-paper" d="M4 3 Q12 1 20 3 T35 3 Q40 7 44 12 T52 21 Q54 32 52 42 T53 67 Q42 70 29 68 T4 69 Q1 56 3 44 T3 22 Q1 11 4 3 Z"/>
+                  <path class="lang-wash" d="M4 3 Q12 1 20 3 T35 3 Q40 7 44 12 T52 21 Q54 32 52 42 T53 67 Q42 70 29 68 T4 69 Q1 56 3 44 T3 22 Q1 11 4 3 Z"/>
+                  <path class="lang-fold" d="M35 3 Q34 11 36 20 Q43 19 52 21"/>
+                  <path class="lang-sketch" d="M6 7 Q4 24 6 32 M7 65 Q19 63 28 65 T48 65"/>
+                </svg><span class="lang-ext">.js</span></span>
               </li>
               <li class="lang" style="--i: 3; --c: #E34F26" title="HTML">
-                <span class="lang-file"><span class="lang-fold"></span><span class="lang-ext">.html</span></span>
+                <span class="lang-file"><svg class="lang-outline" viewBox="0 0 56 72" aria-hidden="true">
+                  <path class="lang-paper" d="M4 3 Q12 1 20 3 T35 3 Q40 7 44 12 T52 21 Q54 32 52 42 T53 67 Q42 70 29 68 T4 69 Q1 56 3 44 T3 22 Q1 11 4 3 Z"/>
+                  <path class="lang-wash" d="M4 3 Q12 1 20 3 T35 3 Q40 7 44 12 T52 21 Q54 32 52 42 T53 67 Q42 70 29 68 T4 69 Q1 56 3 44 T3 22 Q1 11 4 3 Z"/>
+                  <path class="lang-fold" d="M35 3 Q34 11 36 20 Q43 19 52 21"/>
+                  <path class="lang-sketch" d="M6 7 Q4 24 6 32 M7 65 Q19 63 28 65 T48 65"/>
+                </svg><span class="lang-ext">.html</span></span>
               </li>
               <li class="lang" style="--i: 4; --c: #3B7CE8" title="CSS">
-                <span class="lang-file"><span class="lang-fold"></span><span class="lang-ext">.css</span></span>
+                <span class="lang-file"><svg class="lang-outline" viewBox="0 0 56 72" aria-hidden="true">
+                  <path class="lang-paper" d="M4 3 Q12 1 20 3 T35 3 Q40 7 44 12 T52 21 Q54 32 52 42 T53 67 Q42 70 29 68 T4 69 Q1 56 3 44 T3 22 Q1 11 4 3 Z"/>
+                  <path class="lang-wash" d="M4 3 Q12 1 20 3 T35 3 Q40 7 44 12 T52 21 Q54 32 52 42 T53 67 Q42 70 29 68 T4 69 Q1 56 3 44 T3 22 Q1 11 4 3 Z"/>
+                  <path class="lang-fold" d="M35 3 Q34 11 36 20 Q43 19 52 21"/>
+                  <path class="lang-sketch" d="M6 7 Q4 24 6 32 M7 65 Q19 63 28 65 T48 65"/>
+                </svg><span class="lang-ext">.css</span></span>
               </li>
               <li class="lang" style="--i: 5; --c: #E76F00" title="Java">
-                <span class="lang-file"><span class="lang-fold"></span><span class="lang-ext">.java</span></span>
+                <span class="lang-file"><svg class="lang-outline" viewBox="0 0 56 72" aria-hidden="true">
+                  <path class="lang-paper" d="M4 3 Q12 1 20 3 T35 3 Q40 7 44 12 T52 21 Q54 32 52 42 T53 67 Q42 70 29 68 T4 69 Q1 56 3 44 T3 22 Q1 11 4 3 Z"/>
+                  <path class="lang-wash" d="M4 3 Q12 1 20 3 T35 3 Q40 7 44 12 T52 21 Q54 32 52 42 T53 67 Q42 70 29 68 T4 69 Q1 56 3 44 T3 22 Q1 11 4 3 Z"/>
+                  <path class="lang-fold" d="M35 3 Q34 11 36 20 Q43 19 52 21"/>
+                  <path class="lang-sketch" d="M6 7 Q4 24 6 32 M7 65 Q19 63 28 65 T48 65"/>
+                </svg><span class="lang-ext">.java</span></span>
               </li>
               <li class="lang" style="--i: 6; --c: #F05138" title="Swift">
-                <span class="lang-file"><span class="lang-fold"></span><span class="lang-ext">.swift</span></span>
+                <span class="lang-file"><svg class="lang-outline" viewBox="0 0 56 72" aria-hidden="true">
+                  <path class="lang-paper" d="M4 3 Q12 1 20 3 T35 3 Q40 7 44 12 T52 21 Q54 32 52 42 T53 67 Q42 70 29 68 T4 69 Q1 56 3 44 T3 22 Q1 11 4 3 Z"/>
+                  <path class="lang-wash" d="M4 3 Q12 1 20 3 T35 3 Q40 7 44 12 T52 21 Q54 32 52 42 T53 67 Q42 70 29 68 T4 69 Q1 56 3 44 T3 22 Q1 11 4 3 Z"/>
+                  <path class="lang-fold" d="M35 3 Q34 11 36 20 Q43 19 52 21"/>
+                  <path class="lang-sketch" d="M6 7 Q4 24 6 32 M7 65 Q19 63 28 65 T48 65"/>
+                </svg><span class="lang-ext">.swift</span></span>
               </li>
               <li class="lang" style="--i: 7; --c: #6B7BD0" title="C">
-                <span class="lang-file"><span class="lang-fold"></span><span class="lang-ext">.c</span></span>
+                <span class="lang-file"><svg class="lang-outline" viewBox="0 0 56 72" aria-hidden="true">
+                  <path class="lang-paper" d="M4 3 Q12 1 20 3 T35 3 Q40 7 44 12 T52 21 Q54 32 52 42 T53 67 Q42 70 29 68 T4 69 Q1 56 3 44 T3 22 Q1 11 4 3 Z"/>
+                  <path class="lang-wash" d="M4 3 Q12 1 20 3 T35 3 Q40 7 44 12 T52 21 Q54 32 52 42 T53 67 Q42 70 29 68 T4 69 Q1 56 3 44 T3 22 Q1 11 4 3 Z"/>
+                  <path class="lang-fold" d="M35 3 Q34 11 36 20 Q43 19 52 21"/>
+                  <path class="lang-sketch" d="M6 7 Q4 24 6 32 M7 65 Q19 63 28 65 T48 65"/>
+                </svg><span class="lang-ext">.c</span></span>
               </li>
               <li class="lang" style="--i: 8; --c: #1B7EC2" title="C++">
-                <span class="lang-file"><span class="lang-fold"></span><span class="lang-ext">.cpp</span></span>
+                <span class="lang-file"><svg class="lang-outline" viewBox="0 0 56 72" aria-hidden="true">
+                  <path class="lang-paper" d="M4 3 Q12 1 20 3 T35 3 Q40 7 44 12 T52 21 Q54 32 52 42 T53 67 Q42 70 29 68 T4 69 Q1 56 3 44 T3 22 Q1 11 4 3 Z"/>
+                  <path class="lang-wash" d="M4 3 Q12 1 20 3 T35 3 Q40 7 44 12 T52 21 Q54 32 52 42 T53 67 Q42 70 29 68 T4 69 Q1 56 3 44 T3 22 Q1 11 4 3 Z"/>
+                  <path class="lang-fold" d="M35 3 Q34 11 36 20 Q43 19 52 21"/>
+                  <path class="lang-sketch" d="M6 7 Q4 24 6 32 M7 65 Q19 63 28 65 T48 65"/>
+                </svg><span class="lang-ext">.cpp</span></span>
               </li>
             </ol>
           </div>
@@ -1163,7 +1244,7 @@
     function updateFontToggle() {
       var handwriting = document.documentElement.dataset.font !== 'original';
       fontToggle.setAttribute('aria-pressed', String(handwriting));
-      fontToggle.textContent = 'Handwriting: ' + (handwriting ? 'on' : 'off');
+      fontToggle.querySelector('.font-status').textContent = handwriting ? 'on' : 'off';
       fontToggle.title = handwriting ? 'Switch to the original font' : 'Switch to handwriting';
     }
 
@@ -1185,7 +1266,10 @@
 
     function setCurrentNav(id) {
       navLinks.forEach(function (link) {
-        link.classList.toggle('current', link.getAttribute('href') === '#' + id);
+        var current = link.getAttribute('href') === '#' + id;
+        link.classList.toggle('current', current);
+        if (current) link.setAttribute('aria-current', 'page');
+        else link.removeAttribute('aria-current');
       });
     }
 
@@ -1200,6 +1284,35 @@
       });
     }
 
+    var nameHeading = document.getElementById('aboutName');
+    var nameText = nameHeading.querySelector('span');
+    var fullName = nameHeading.getAttribute('aria-label');
+    var nameTimer;
+
+    function typeName() {
+      clearTimeout(nameTimer);
+      nameHeading.classList.remove('is-typing');
+      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        nameText.textContent = fullName;
+        return;
+      }
+      nameText.textContent = '';
+      nameHeading.classList.add('is-typing');
+      var length = 0;
+      function typeLetter() {
+        length++;
+        nameText.textContent = fullName.slice(0, length);
+        if (length < fullName.length) {
+          nameTimer = setTimeout(typeLetter, 95);
+        } else {
+          nameTimer = setTimeout(function () {
+            nameHeading.classList.remove('is-typing');
+          }, 350);
+        }
+      }
+      nameTimer = setTimeout(typeLetter, 140);
+    }
+
     function openPage(id) {
       var target = document.getElementById(id) || document.getElementById('about');
       pages.forEach(function (p) { p.classList.toggle('active', p === target); });
@@ -1208,6 +1321,12 @@
       document.body.classList.toggle('skills', target.id === 'skills');
       document.title = target.id === 'about' ? baseTitle : target.dataset.title + ' | ' + baseTitle;
       setCurrentNav(target.id);
+      if (target.id === 'about') typeName();
+      else {
+        clearTimeout(nameTimer);
+        nameHeading.classList.remove('is-typing');
+        nameText.textContent = fullName;
+      }
       updateScrollFades();
     }
 
@@ -1436,6 +1555,87 @@
       buildMind();
       requestAnimationFrame(trackMindLines);
     }
+
+    // A brief ink stroke that dries away; rendering stops when the trail is empty.
+    (function () {
+      var canvas = document.getElementById('penTrail');
+      var ctx = canvas.getContext('2d');
+      if (!ctx) return;
+      var motion = window.matchMedia('(prefers-reduced-motion: reduce)');
+      var points = [];
+      var frame = 0;
+      var lifetime = 500;
+      var trailNav = document.querySelector('nav');
+      var ink = '';
+
+      function resizeTrail() {
+        var scale = Math.min(window.devicePixelRatio || 1, 2);
+        canvas.width = Math.round(window.innerWidth * scale);
+        canvas.height = Math.round(window.innerHeight * scale);
+        ctx.setTransform(scale, 0, 0, scale, 0, 0);
+        points = [];
+      }
+
+      function drawTrail(now) {
+        frame = 0;
+        ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
+        points = points.filter(function (point) { return now - point.time < lifetime; });
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+        ctx.strokeStyle = ink;
+        for (var i = 1; i < points.length; i++) {
+          var a = points[i - 1];
+          var b = points[i];
+          if (b.breakBefore) continue;
+          var freshness = Math.max(0, 1 - (now - a.time) / lifetime);
+          var previous = points[i - 2];
+          var startX = previous && !a.breakBefore ? (previous.x + a.x) / 2 : a.x;
+          var startY = previous && !a.breakBefore ? (previous.y + a.y) / 2 : a.y;
+          ctx.globalAlpha = freshness * 0.65;
+          ctx.lineWidth = 0.6 + freshness * 1.8;
+          ctx.beginPath();
+          ctx.moveTo(startX, startY);
+          ctx.quadraticCurveTo(a.x, a.y, (a.x + b.x) / 2, (a.y + b.y) / 2);
+          ctx.stroke();
+        }
+        ctx.globalAlpha = 1;
+        if (points.length) frame = requestAnimationFrame(drawTrail);
+      }
+
+      var disconnected = true;
+      document.addEventListener('pointermove', function (event) {
+        if (event.pointerType !== 'mouse' || motion.matches) return;
+        var navBounds = trailNav.getBoundingClientRect();
+        if (event.clientX >= navBounds.left && event.clientX <= navBounds.right &&
+            event.clientY >= navBounds.top && event.clientY <= navBounds.bottom) {
+          disconnected = true;
+          return;
+        }
+        var now = performance.now();
+        var last = points[points.length - 1];
+        points.push({
+          x: event.clientX, y: event.clientY, time: now,
+          breakBefore: disconnected || !last || now - last.time > 100
+        });
+        if (points.length > 1200) points.shift();
+        disconnected = false;
+        if (!frame) {
+          ink = getComputedStyle(document.documentElement).getPropertyValue('--nav-blue').trim();
+          frame = requestAnimationFrame(drawTrail);
+        }
+      }, { passive: true });
+      document.documentElement.addEventListener('mouseleave', function () { disconnected = true; });
+      window.addEventListener('blur', function () { disconnected = true; });
+      window.addEventListener('resize', resizeTrail);
+      motion.addEventListener('change', function () {
+        points = [];
+        if (frame) cancelAnimationFrame(frame);
+        frame = 0;
+        disconnected = true;
+        ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
+      });
+      resizeTrail();
+    })();
 
     document.addEventListener('mousemove', function (e) {
       document.documentElement.style.setProperty('--mx', e.clientX + 'px');
